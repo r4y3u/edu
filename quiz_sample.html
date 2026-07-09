@@ -8,15 +8,11 @@
 <style>
 /*
   Quiz Game
-  Version : 1.2.2
+  Version : 1.2.1
   Concept : 静かなゲーム / 思考を邪魔しないUI
   File    : quiz_v1.2.0.html
 
   CHANGELOG
-  1.2.2
-  - リザルト画面で正解・誤りフィードバックが残る/再表示される可能性を抑止
-  - クイズ作成者表記を全画面ボタン直下に固定
-
   1.2.1
   - 画像付き問題の表示領域を再調整
   - 狭い縦長画面では縦長画像も上下表示に自動切替
@@ -278,18 +274,7 @@ button{font-family:inherit}
 }
 .title-kicker{font-size:.78rem;letter-spacing:.16em;color:var(--muted);font-weight:800;text-transform:uppercase}
 .game-title{font-size:clamp(2.2rem,7vw,5rem);line-height:1.05;margin:14px 0 10px;font-weight:900;letter-spacing:.02em}
-.quiz-author{
-  position:static;
-  margin:2px auto 0;
-  width:min(280px,80%);
-  color:var(--muted);
-  font-size:.76rem;
-  font-weight:800;
-  letter-spacing:.035em;
-  text-align:center;
-  opacity:.72;
-  line-height:1.35;
-}
+.quiz-author{position:absolute;left:24px;right:24px;bottom:18px;margin:0;color:var(--muted);font-size:.78rem;font-weight:800;letter-spacing:.04em;text-align:center;opacity:.72}
 .start-copy{color:var(--muted);line-height:1.8;margin:0 0 34px;font-weight:700}
 .start-actions{display:grid;grid-template-columns:1fr;gap:12px;width:min(420px,100%);margin:0 auto}
 .start-actions .btn{font-size:1.02rem;font-weight:900;letter-spacing:.03em;padding:15px 20px}
@@ -593,7 +578,6 @@ button{font-family:inherit}
 .feedback.ng{background:rgba(227,80,80,.92)}
 .feedback.ok.is-show{animation:feedbackCorrectBounce 360ms cubic-bezier(.18,1.28,.35,1) both}
 .feedback.ng.is-show{animation:feedbackWrongShake 320ms ease both}
-body:not([data-screen="quiz"]) .feedback{opacity:0!important;pointer-events:none!important;animation:none!important}
 
 /* Pause / Result / Record */
 .center-screen{place-items:center;padding:clamp(24px,5vw,60px)}
@@ -842,8 +826,9 @@ body.is-ultra-compact-height .time-label{font-size:.84rem}
 <div class="app" id="app">
   <section class="screen start-screen is-active" id="screenStart" aria-label="初期画面">
     <div class="start-inner">
-      <div class="title-kicker">Quiz Game v1.2.2</div>
+      <div class="title-kicker">Quiz Game v1.2.1</div>
       <h1 class="game-title" id="gameTitle">テストプレイ</h1>
+      <div class="quiz-author" id="quizAuthor">クイズ作成：匿名</div>
       <p class="start-copy">静かに、速く、正確に。知識を確かめる時間です。</p>
       <div class="start-actions" aria-label="初期操作">
         <button class="btn" id="startBtn" data-key="1" aria-keyshortcuts="1">挑戦</button>
@@ -852,7 +837,6 @@ body.is-ultra-compact-height .time-label{font-size:.84rem}
         <button class="btn secondary" id="recordBtn" data-key="4" aria-keyshortcuts="4">成績</button>
         <button class="btn secondary sound-toggle start-utility" id="startSoundBtn" type="button" data-key="5" aria-keyshortcuts="5" aria-pressed="false">サウンド OFF</button>
         <button class="btn secondary fullscreen-toggle sound-toggle start-utility" id="startFullscreenBtn" type="button" data-key="6" aria-keyshortcuts="6" aria-pressed="false">全画面 OFF</button>
-        <div class="quiz-author" id="quizAuthor">クイズ作成：匿名</div>
       </div>
       <div class="start-notice" id="startNotice" aria-live="polite"></div>
       <div class="key-note" aria-hidden="true"></div>
@@ -938,7 +922,7 @@ body.is-ultra-compact-height .time-label{font-size:.84rem}
 <script>
 'use strict';
 
-const VERSION = '1.2.2';
+const VERSION = '1.2.1';
 const TITLE_FROM_FILE = "テストプレイ";
 const QUIZ_AUTHOR = "niwa";
 const DEFAULT_TIME_LIMIT = 20;
@@ -1071,10 +1055,7 @@ const state = {
   allRecordsResetTimerId:null,
   studyAdvanceReady:false,
   isPaused:false,
-  questionReveal:null,
-  answerSequenceId:0,
-  feedbackTimerId:null,
-  inputGuardUntil:0
+  questionReveal:null
 };
 
 function ensureAudio(){
@@ -1344,7 +1325,6 @@ function changeScreen(name, afterShown){
   const previous = screens[previousName];
   const next = screens[name];
   state.screen = name;
-  document.body.dataset.screen = String(name).toLowerCase();
   hideFeedback();
 
   if(!next) return;
@@ -1449,8 +1429,6 @@ function updateTimerForMode(seconds){
 function buildGame(mode = 'challenge'){
   stopTimer();
   clearQuestionAnimation();
-  clearFeedbackTimer();
-  state.answerSequenceId++;
   hideFeedback();
   hideStudyPanel();
   state.mode = mode;
@@ -1466,7 +1444,6 @@ function buildGame(mode = 'challenge'){
   state.remaining = state.currentTimeLimit;
   state.isPaused = false;
   state.questionReveal = null;
-  guardNumericInput(180);
   state.answerTimes = [];
   state.answerLog = [];
   state.playStart = performance.now();
@@ -1871,10 +1848,8 @@ function escapeHtml(str){
   return String(str).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 }
 function chooseAnswer(button){
-  if(!button || button.disabled || state.locked || state.screen !== 'QUIZ') return;
+  if(state.locked || state.screen !== 'QUIZ') return;
   state.locked = true;
-  const answerToken = ++state.answerSequenceId;
-  clearFeedbackTimer();
   stopTimer();
   state.countdownPending = false;
   state.delayRemainingMs = 0;
@@ -1900,18 +1875,12 @@ function chooseAnswer(button){
   markChoices(picked, q.answer, isCorrect);
   showFeedback(isCorrect ? '正解' : '誤り', isCorrect ? 'ok' : 'ng');
   if(isStudyMode()){
-    state.feedbackTimerId = setTimeout(() => {
-      state.feedbackTimerId = null;
-      if(answerToken !== state.answerSequenceId || state.screen !== 'QUIZ') return;
+    setTimeout(() => {
       hideFeedback();
       showStudyPanel(isCorrect);
     }, STUDY_EXPLANATION_DELAY_MS);
   }else{
-    state.feedbackTimerId = setTimeout(() => {
-      state.feedbackTimerId = null;
-      if(answerToken !== state.answerSequenceId || state.screen !== 'QUIZ') return;
-      nextQuestion(answerToken);
-    }, isCorrect ? 700 : 900);
+    setTimeout(nextQuestion, isCorrect ? 700 : 900);
   }
 }
 function markChoices(picked, correct, isCorrect){
@@ -1923,9 +1892,7 @@ function markChoices(picked, correct, isCorrect){
     else btn.classList.add('is-dim');
   });
 }
-function nextQuestion(expectedAnswerToken){
-  if(expectedAnswerToken != null && expectedAnswerToken !== state.answerSequenceId) return;
-  clearFeedbackTimer();
+function nextQuestion(){
   hideFeedback();
   state.index++;
   if(state.index >= state.questions.length) showResult();
@@ -2014,12 +1981,6 @@ function resumeGame(){
 }
 function showResult(){
   stopTimer();
-  clearFeedbackTimer();
-  state.answerSequenceId++;
-  state.locked = true;
-  state.currentChoices = [];
-  guardNumericInput(500);
-  hideFeedback();
   hideStudyPanel();
   const total = state.questions.length;
   const correct = state.correct;
@@ -2231,8 +2192,6 @@ function getAllRecordStorageKeys(){
 }
 function showRecordScreen(message = '', type = ''){
   stopTimer();
-  clearFeedbackTimer();
-  state.answerSequenceId++;
   hideFeedback();
   disarmRecordReset(false);
   disarmAllRecordsReset(false);
@@ -2298,35 +2257,20 @@ function clearAllRecords(){
   showRecordScreen('すべてのクイズ記録をリセットしました。', 'done');
 }
 
-function clearFeedbackTimer(){
-  if(state.feedbackTimerId){
-    clearTimeout(state.feedbackTimerId);
-    state.feedbackTimerId = null;
-  }
-}
-function guardNumericInput(ms = 320){
-  state.inputGuardUntil = Math.max(state.inputGuardUntil || 0, performance.now() + ms);
-}
 function showFeedback(text, type){
-  if(state.screen !== 'QUIZ') return;
   if(type === 'ok') playCorrectSound();
   if(type === 'ng') playWrongSound();
   const el = $('feedback');
   el.textContent = text;
   el.className = `feedback ${type} is-show`;
 }
-function hideFeedback(){
-  const el = $('feedback');
-  if(el) el.className = 'feedback';
-}
+function hideFeedback(){ $('feedback').className = 'feedback'; }
 function showHintOnce(){
   // キー割り当ては画面上に出しすぎず、操作の中で自然に気付ける設計にする。
 }
 function quitToStart(){
   stopTimer();
   clearQuestionAnimation();
-  clearFeedbackTimer();
-  state.answerSequenceId++;
   clearCountdownDelay(false);
   state.countdownPending = false;
   state.isPaused = false;
@@ -2353,12 +2297,6 @@ function handleKey(e){
 
   if(!['1','2','3','4','5','6'].includes(e.key) || e.repeat) return;
 
-  if((state.inputGuardUntil || 0) > performance.now()){
-    e.preventDefault();
-    e.stopPropagation();
-    return;
-  }
-
   if(state.screen === 'QUIZ'){
     if(['1','2','3','4'].includes(e.key) && advanceFromStudyPanel()){
       e.preventDefault();
@@ -2384,7 +2322,6 @@ function pulseButton(button){
   setTimeout(() => button.classList.remove('is-pressed'), 280);
 }
 
-document.body.dataset.screen = 'start';
 $('gameTitle').textContent = TITLE_FROM_FILE;
 $('quizAuthor').textContent = `クイズ作成：${QUIZ_AUTHOR || '匿名'}`;
 $('startBtn').addEventListener('click', () => startGame('challenge'));
