@@ -12,56 +12,356 @@
   >
 
   <meta name="robots" content="index,follow">
-  
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&display=swap" rel="stylesheet">
 
   <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7ff;
+      --surface: rgba(255, 255, 255, 0.82);
+      --surface-strong: #ffffff;
+      --text: #20243a;
+      --muted: #69708f;
+      --line: rgba(80, 91, 175, 0.16);
+      --primary: #4159d8;
+      --primary-deep: #303f9f;
+      --violet: #7652d6;
+      --accent: #ca5da8;
+      --shadow: 0 20px 60px rgba(44, 54, 124, 0.13);
+      --shadow-hover: 0 24px 52px rgba(54, 61, 150, 0.2);
+      --radius-xl: 30px;
+      --radius-lg: 21px;
+      --ease: cubic-bezier(0.2, 0.75, 0.25, 1);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--bg);
+      -webkit-text-size-adjust: 100%;
+    }
+
     body {
-      font-family: "Noto Sans JP", sans-serif;
-      font-size: 16pt;
-      margin: 40px;
-      line-height: 1.8;
+      min-height: 100vh;
+      margin: 0;
+      padding: clamp(24px, 5vw, 72px) 20px;
+      overflow-x: hidden;
+      color: var(--text);
+      font-family: "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(103, 120, 235, 0.18), transparent 27rem),
+        radial-gradient(circle at 90% 18%, rgba(208, 91, 171, 0.12), transparent 24rem),
+        linear-gradient(135deg, #f7f9ff 0%, #f4f2ff 48%, #fbf7ff 100%);
+    }
+
+    body::before,
+    body::after {
+      position: fixed;
+      z-index: -1;
+      content: "";
+      pointer-events: none;
+    }
+
+    body::before {
+      inset: 0;
+      opacity: 0.52;
+      background-image:
+        linear-gradient(rgba(70, 83, 170, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(70, 83, 170, 0.045) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(to bottom, black, transparent 88%);
+    }
+
+    body::after {
+      top: -120px;
+      right: -90px;
+      width: 360px;
+      height: 360px;
+      border: 1px solid rgba(113, 85, 212, 0.16);
+      border-radius: 50%;
+      box-shadow:
+        0 0 0 42px rgba(91, 104, 211, 0.035),
+        0 0 0 96px rgba(197, 92, 171, 0.025);
+    }
+
+    main {
+      width: min(100%, 980px);
+      margin: 0 auto;
+      padding: clamp(30px, 6vw, 64px);
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      border-radius: var(--radius-xl);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    header {
+      position: relative;
+      margin-bottom: clamp(34px, 6vw, 58px);
+      padding: 4px 0 clamp(28px, 4vw, 38px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    header::after {
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: clamp(72px, 14vw, 130px);
+      height: 3px;
+      border-radius: 999px;
+      content: "";
+      background: linear-gradient(90deg, var(--primary), var(--violet), var(--accent));
     }
 
     h1 {
-      font-size: 28pt;
-      margin-bottom: 24px;
+      margin: 0 0 8px;
+      font-size: clamp(2.25rem, 7vw, 4.4rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.045em;
+      background: linear-gradient(115deg, #24358f 8%, #4c59d8 52%, #8755d1 86%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(0.98rem, 2vw, 1.14rem);
+      font-weight: 500;
+      letter-spacing: 0.08em;
     }
 
     ul {
-      padding-left: 1.5em;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    li {
+      position: relative;
+      min-width: 0;
+    }
+
+    li::before {
+      position: absolute;
+      z-index: 2;
+      top: 50%;
+      left: 22px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      content: "";
+      background: linear-gradient(135deg, var(--primary), var(--violet));
+      box-shadow: 0 0 0 7px rgba(78, 91, 215, 0.09);
+      transform: translateY(-50%);
+      transition:
+        transform 260ms var(--ease),
+        box-shadow 260ms var(--ease),
+        background 260ms var(--ease);
+    }
+
+    li:nth-child(3n + 2)::before {
+      background: linear-gradient(135deg, var(--violet), var(--accent));
+    }
+
+    li:nth-child(3n)::before {
+      background: linear-gradient(135deg, #3f7bd8, var(--violet));
     }
 
     a {
+      position: relative;
+      display: flex;
+      min-height: 86px;
+      align-items: center;
+      padding: 20px 62px 20px 52px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.72);
+      font-size: clamp(0.94rem, 1.7vw, 1.05rem);
+      font-weight: 700;
+      line-height: 1.5;
       text-decoration: none;
+      box-shadow: 0 7px 20px rgba(54, 65, 137, 0.055);
+      transition:
+        transform 280ms var(--ease),
+        border-color 280ms var(--ease),
+        box-shadow 280ms var(--ease),
+        color 280ms var(--ease),
+        background-color 280ms var(--ease);
+    }
+
+    a::before {
+      position: absolute;
+      inset: 0;
+      content: "";
+      opacity: 0;
+      background:
+        linear-gradient(120deg, rgba(67, 88, 216, 0.08), rgba(121, 80, 211, 0.05) 58%, rgba(202, 93, 168, 0.08));
+      transform: translateX(-14%);
+      transition:
+        opacity 280ms var(--ease),
+        transform 420ms var(--ease);
+    }
+
+    a::after {
+      position: absolute;
+      top: 50%;
+      right: 24px;
+      width: 12px;
+      height: 12px;
+      border-top: 2px solid currentColor;
+      border-right: 2px solid currentColor;
+      content: "";
+      opacity: 0.54;
+      transform: translateY(-50%) rotate(45deg);
+      transition:
+        opacity 240ms var(--ease),
+        transform 280ms var(--ease);
     }
 
     a:hover {
-      text-decoration: underline;
+      z-index: 1;
+      border-color: rgba(82, 91, 202, 0.34);
+      color: var(--primary-deep);
+      background: var(--surface-strong);
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-5px);
+    }
+
+    a:hover::before {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    a:hover::after {
+      opacity: 0.95;
+      transform: translate(4px, -50%) rotate(45deg);
+    }
+
+    li:hover::before {
+      box-shadow: 0 0 0 9px rgba(111, 82, 210, 0.12);
+      transform: translateY(-50%) scale(1.12);
+    }
+
+    a:focus-visible {
+      outline: 3px solid rgba(65, 89, 216, 0.34);
+      outline-offset: 4px;
+      border-color: rgba(65, 89, 216, 0.5);
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 18px 14px;
+      }
+
+      main {
+        padding: 32px 20px 24px;
+        border-radius: 24px;
+      }
+
+      header {
+        margin-bottom: 30px;
+      }
+
+      ul {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      a {
+        min-height: 76px;
+        padding: 17px 54px 17px 48px;
+        border-radius: 18px;
+      }
+
+      li::before {
+        left: 20px;
+      }
+
+      a::after {
+        right: 22px;
+      }
+    }
+
+    @media (max-width: 390px) {
+      main {
+        padding-inline: 16px;
+      }
+
+      a {
+        padding-left: 44px;
+        font-size: 0.9rem;
+      }
+
+      li::before {
+        left: 18px;
+        width: 8px;
+        height: 8px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      main {
+        background: rgba(255, 255, 255, 0.96);
+      }
     }
   </style>
-  
+
   <link
     rel="canonical"
     href="https://r4y3u.github.io/edu/"
   >
-  
+
 </head>
 <body>
-  <h1>r4y3u</h1>
-  <p>
-    prototype for education
-  </p>
-  <ul>
-    <li><a href="https://r4y3u.github.io/edu/quiz_sample.html" target="_blank" rel="noopener noreferrer">quiz_sample（クイズ）</a></li>
-    <li><a href="https://r4y3u.github.io/edu/quiz_editor.html" target="_blank" rel="noopener noreferrer">quiz_editor（クイズ）</a></li>
-    <li><a href="https://r4y3u.github.io/mulrate/" target="_blank" rel="noopener noreferrer">MulRate（かけ算練習）</a></li>
-    <li><a href="https://r4y3u.github.io/digicanji/DigiCanji.html" target="_blank" rel="noopener noreferrer">DigiCanji（漢字練習）</a></li>
-    <li><a href="https://r4y3u.github.io/digicanji/DigiCanji_Editor.html" target="_blank" rel="noopener noreferrer">DigiCanji_Editor（漢字練習）</a></li>
-    <li><a href="https://r4y3u.github.io/yubigaki/" target="_blank" rel="noopener noreferrer">DigiCanji(pre-plototype)</a></li>
-    <li><a href="https://r4y3u.github.io/edu/x.html" target="_blank" rel="noopener noreferrer">その他</a></li>
-  </ul>
+  <main>
+    <header>
+      <h1>r4y3u</h1>
+      <p>
+        prototype for education
+      </p>
+    </header>
+
+    <nav aria-label="アプリ一覧">
+      <ul>
+        <li><a href="https://r4y3u.github.io/edu/quiz_sample.html" target="_blank" rel="noopener noreferrer">quiz_sample（クイズ）</a></li>
+        <li><a href="https://r4y3u.github.io/edu/quiz_editor.html" target="_blank" rel="noopener noreferrer">quiz_editor（クイズ）</a></li>
+        <li><a href="https://r4y3u.github.io/mulrate/" target="_blank" rel="noopener noreferrer">MulRate（かけ算練習）</a></li>
+        <li><a href="https://r4y3u.github.io/digicanji/DigiCanji.html" target="_blank" rel="noopener noreferrer">DigiCanji（漢字練習）</a></li>
+        <li><a href="https://r4y3u.github.io/digicanji/DigiCanji_Editor.html" target="_blank" rel="noopener noreferrer">DigiCanji_Editor（漢字練習）</a></li>
+        <li><a href="https://r4y3u.github.io/yubigaki/" target="_blank" rel="noopener noreferrer">DigiCanji(pre-plototype)</a></li>
+        <li><a href="https://r4y3u.github.io/edu/x.html" target="_blank" rel="noopener noreferrer">その他</a></li>
+      </ul>
+    </nav>
+  </main>
 </body>
 </html>
